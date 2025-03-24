@@ -246,6 +246,14 @@ module "bedrock_chat_function" {
   env_variables = {
     BEDROCK_MODEL_ID = ""
   }
+  permissions = [
+    {
+      statement_id = "AllowExecutionFromAPIGateway"
+      action       = "lambda:InvokeFunction"
+      principal    = "apigateway.amazonaws.com"
+      source_arn   = "${aws_api_gateway_rest_api.bedrock_chat_rest_api.execution_arn}/*/${aws_api_gateway_method.bedrock_chat_resource_api_method.http_method}${aws_api_gateway_resource.bedrock_chat_resource_api.path}"
+    }
+  ]
   handler   = "lambda.lambda_handler"
   runtime   = "python3.12"
   s3_bucket = module.bedrock_chat_function_code.bucket
@@ -274,20 +282,13 @@ resource "aws_api_gateway_method" "bedrock_chat_resource_api_method" {
   authorization    = "NONE"
 }
 
-resource "aws_api_gateway_integration" "event-source-mapping-api-integration" {
+resource "aws_api_gateway_integration" "bedrock_chat_resource_api_method_integration" {
   rest_api_id             = aws_api_gateway_rest_api.bedrock_chat_rest_api.id
   resource_id             = aws_api_gateway_resource.bedrock_chat_resource_api.id
   http_method             = aws_api_gateway_method.bedrock_chat_resource_api_method.http_method
   integration_http_method = "POST"
-  type                    = "AWS"
-  credentials             = aws_iam_role.api_gateway_execution_role.arn
-  uri                     = "arn:aws:apigateway:${var.region}:sqs:path/${data.aws_caller_identity.current.account_id}/${aws_sqs_queue.event-source-mapping-queue.name}"
-  request_parameters = {
-    "integration.request.header.Content-Type" = "'application/x-www-form-urlencoded'"
-  }
-  request_templates = {
-    "application/json" = "Action=SendMessage&MessageBody=$input.body"
-  }
+  type                    = "AWS_PROXY"
+  uri                     = module.bedrock_chat_function.invoke_arn
 }
 
 resource "aws_api_gateway_method_response" "method_response_200" {
@@ -303,7 +304,7 @@ resource "aws_api_gateway_integration_response" "integration_response_200" {
   http_method = aws_api_gateway_method.bedrock_chat_resource_api_method.http_method
   status_code = aws_api_gateway_method_response.method_response_200.status_code
   depends_on = [
-    aws_api_gateway_integration.event-source-mapping-api-integration
+    aws_api_gateway_integration.bedrock_chat_resource_api_method_integration
   ]
 }
 

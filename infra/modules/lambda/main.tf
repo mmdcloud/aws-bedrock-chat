@@ -10,3 +10,13 @@ resource "aws_lambda_function" "function" {
     variables = var.env_variables
   }
 }
+
+# Granting permissions for lambda
+resource "aws_lambda_permission" "lambda_function_permission" {
+  count         = length(var.permissions)
+  statement_id  = var.permissions[count.index].statement_id
+  function_name = aws_lambda_function.function.arn
+  action        = var.permissions[count.index].action
+  principal     = var.permissions[count.index].principal
+  source_arn    = var.permissions[count.index].source_arn
+}
