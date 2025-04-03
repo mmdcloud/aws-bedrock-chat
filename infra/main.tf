@@ -313,7 +313,7 @@ resource "aws_api_gateway_deployment" "bedrock_chat_api_deployment" {
   lifecycle {
     create_before_destroy = true
   }
-  depends_on = [ aws_api_gateway_integration.bedrock_chat_resource_api_method_integration ]
+  depends_on = [aws_api_gateway_integration.bedrock_chat_resource_api_method_integration]
 }
 
 resource "aws_api_gateway_stage" "bedrock_chat_api_stage" {

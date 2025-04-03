@@ -13,7 +13,7 @@ cd /home/ubuntu
 mkdir app
 # Checking out from Version Control
 git clone https://github.com/mmdcloud/aws-bedrock-chat
-cd aws-bedrock-chat/code
+cd aws-bedrock-chat/frontend
 cp -r . /home/ubuntu/app/
 cd /home/ubuntu/app/
 # Copying Nginx config
